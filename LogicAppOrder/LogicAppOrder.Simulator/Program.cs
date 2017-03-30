@@ -13,7 +13,7 @@ namespace LogicAppOrder.Simulator
     {
         static void Main(string[] args)
         {
-            var client = QueueClient.CreateFromConnectionString("Endpoint=sb://logicapporder.servicebus.windows.net/;SharedAccessKeyName=SendKey;SharedAccessKey=lLDlSLxC9Cox2YfG7G0qAmsNpFFWTCTyIJd8FKY1L/Q=;EntityPath=orders");
+            var client = QueueClient.CreateFromConnectionString("Endpoint=sb://logicappvienna.servicebus.windows.net/;SharedAccessKeyName=WriteKey;SharedAccessKey=DPbxHCRnOvttCYikc16caYcJMZRZEMrSnWNDFSzw6kE=;EntityPath=orders");
 
             var messages = client.ReceiveBatch(10, TimeSpan.FromSeconds(1));
             foreach (var m in messages)
@@ -33,7 +33,7 @@ namespace LogicAppOrder.Simulator
             var json = JsonConvert.SerializeObject(order);
 
             var message = new BrokeredMessage(new MemoryStream(Encoding.UTF8.GetBytes(json)));
-            
+
             client.Send(message);
             Console.WriteLine("Sent message:");
             Console.WriteLine(json);

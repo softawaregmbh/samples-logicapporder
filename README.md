@@ -6,6 +6,12 @@
 * Create a Queue named **orders**
 * Add a shared access policy (only listen is required) for further use
 
+# Hello World
+* Create a new Logic App in Azure portal
+* Use template to send an email whenever a tweet is created
+
+# Real world scenario
+
 ## Create a Logic App project in Visual Studio 
 * New project based on template **Cloud > Azure Resource Group** called **LogicAppOrder**
 * Add **Logic App Template**

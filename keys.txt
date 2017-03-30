@@ -1,0 +1,1 @@
+Endpoint=sb://logicappvienna.servicebus.windows.net/;SharedAccessKeyName=ListenKey;SharedAccessKey=hNaSDpO0ffHJB0RwZKT5UY3K32BQ5Y+DAbC5jeGdMbA=;EntityPath=orders
