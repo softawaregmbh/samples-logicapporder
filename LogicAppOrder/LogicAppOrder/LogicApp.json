@@ -1,0 +1,210 @@
+{
+  "$connections": {
+    "value": {
+      "/subscriptions/b2b49f65-9a48-4e16-812d-794e29cddc25/providers/Microsoft.Web/locations/westeurope/managedApis/servicebus": {
+        "connectionId": "/subscriptions/b2b49f65-9a48-4e16-812d-794e29cddc25/resourceGroups/LogicAppDemo/providers/Microsoft.Web/connections/servicebus",
+        "connectionName": "servicebus",
+        "id": "/subscriptions/b2b49f65-9a48-4e16-812d-794e29cddc25/providers/Microsoft.Web/locations/westeurope/managedApis/servicebus"
+      },
+      "office365": {
+        "connectionId": "/subscriptions/b2b49f65-9a48-4e16-812d-794e29cddc25/resourceGroups/LogicAppDemo/providers/Microsoft.Web/connections/office365",
+        "connectionName": "office365",
+        "id": "/subscriptions/b2b49f65-9a48-4e16-812d-794e29cddc25/providers/Microsoft.Web/locations/westeurope/managedApis/office365"
+      },
+      "twilio_1": {
+        "connectionId": "/subscriptions/b2b49f65-9a48-4e16-812d-794e29cddc25/resourceGroups/LogicAppDemo/providers/Microsoft.Web/connections/twilio-1",
+        "connectionName": "twilio-1",
+        "id": "/subscriptions/b2b49f65-9a48-4e16-812d-794e29cddc25/providers/Microsoft.Web/locations/westeurope/managedApis/twilio"
+      }
+    }
+  },
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "actions": {
+      "Approval_necessary": {
+        "actions": {},
+        "else": {
+          "actions": {
+            "Order_approved": {
+              "actions": {},
+              "else": {
+                "actions": {
+                  "Terminate": {
+                    "inputs": {
+                      "runStatus": "Cancelled"
+                    },
+                    "runAfter": {},
+                    "type": "Terminate"
+                  }
+                }
+              },
+              "expression": "@equals(body('Send_approval_email')?['SelectedOption'], 'Approve')",
+              "runAfter": {
+                "Send_approval_email": [
+                  "Succeeded"
+                ]
+              },
+              "type": "If"
+            },
+            "Send_approval_email": {
+              "inputs": {
+                "body": {
+                  "Message": {
+                    "Body": "Bitte um Freigabe dieser Bestellung.\n\nKunde: @{body('Parse_JSON')?['customerNumber']}\nArtikel: @{body('Parse_JSON')?['articleNumber']}",
+                    "Importance": "Normal",
+                    "Options": "Approve, Reject",
+                    "Subject": "Freigabe für Kunde @{body('Parse_JSON')?['customerNumber']}",
+                    "To": "roman.schacherl@softaware.at"
+                  },
+                  "NotificationUrl": "@listCallbackUrl()"
+                },
+                "host": {
+                  "api": {
+                    "runtimeUrl": "https://logic-apis-westeurope.azure-apim.net/apim/office365"
+                  },
+                  "connection": {
+                    "name": "@parameters('$connections')['office365']['connectionId']"
+                  }
+                },
+                "path": "/approvalmail/$subscriptions"
+              },
+              "runAfter": {},
+              "type": "ApiConnectionWebhook"
+            }
+          }
+        },
+        "expression": "@equals(body('CheckOrderLimit')?['isBelowLimit'], true)",
+        "runAfter": {
+          "CheckOrderLimit": [
+            "Succeeded"
+          ]
+        },
+        "type": "If"
+      },
+      "CheckOrderLimit": {
+        "inputs": {
+          "body": {
+            "amount": "@body('Parse_JSON')?['amount']",
+            "pricePerItem": "@body('Parse_JSON')?['pricePerItem']"
+          },
+          "function": {
+            "id": "/subscriptions/b2b49f65-9a48-4e16-812d-794e29cddc25/resourceGroups/LogicAppDemo/providers/Microsoft.Web/sites/logicapporder/functions/CheckOrderLimit"
+          }
+        },
+        "runAfter": {
+          "Parse_JSON": [
+            "Succeeded"
+          ]
+        },
+        "type": "Function"
+      },
+      "Parse_JSON": {
+        "inputs": {
+          "content": "@base64ToString(triggerBody()?['ContentData'])",
+          "schema": {
+            "properties": {
+              "amount": {
+                "type": "number"
+              },
+              "articleNumber": {
+                "type": "string"
+              },
+              "customerNumber": {
+                "type": "string"
+              },
+              "pricePerItem": {
+                "type": "number"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "runAfter": {},
+        "type": "ParseJson"
+      },
+      "Send_Text_Message_(SMS)": {
+        "inputs": {
+          "body": {
+            "body": "Der Artikel @{body('Parse_JSON')?['articleNumber']} ist unterwegs zu Ihnen!",
+            "from": "+43676800200395",
+            "to": "+436644633397"
+          },
+          "host": {
+            "api": {
+              "runtimeUrl": "https://logic-apis-westeurope.azure-apim.net/apim/twilio"
+            },
+            "connection": {
+              "name": "@parameters('$connections')['twilio_1']['connectionId']"
+            }
+          },
+          "method": "post",
+          "path": "/Messages.json"
+        },
+        "runAfter": {
+          "Waiting_for_Delivery_notification": [
+            "Succeeded"
+          ]
+        },
+        "type": "ApiConnection"
+      },
+      "Waiting_for_Delivery_notification": {
+        "inputs": {
+          "subscribe": {
+            "body": {
+              "callbackUrl": "@{listCallbackUrl()}",
+              "orderId": "@{triggerBody()?['MessageId']}"
+            },
+            "method": "POST",
+            "uri": "http://logicappdelivery.azurewebsites.net/api/delivery/subscribe"
+          },
+          "unsubscribe": {
+            "body": {
+              "callbackUrl": "@{listCallbackUrl()}",
+              "orderId": "@{triggerBody()?['MessageId']}"
+            },
+            "method": "POST",
+            "uri": "http://logicappdelivery.azurewebsites.net/api/delivery/unsubscribe"
+          }
+        },
+        "runAfter": {
+          "Approval_necessary": [
+            "Succeeded"
+          ]
+        },
+        "type": "HttpWebhook"
+      }
+    },
+    "contentVersion": "1.0.0.0",
+    "outputs": {},
+    "parameters": {
+      "$connections": {
+        "defaultValue": {},
+        "type": "Object"
+      }
+    },
+    "triggers": {
+      "New_Order": {
+        "inputs": {
+          "host": {
+            "api": {
+              "runtimeUrl": "https://logic-apis-westeurope.azure-apim.net/apim/servicebus"
+            },
+            "connection": {
+              "name": "@parameters('$connections')['/subscriptions/b2b49f65-9a48-4e16-812d-794e29cddc25/providers/Microsoft.Web/locations/westeurope/managedApis/servicebus']['connectionId']"
+            }
+          },
+          "method": "get",
+          "path": "/@{encodeURIComponent('orders')}/messages/head",
+          "queries": {
+            "queueType": "Main"
+          }
+        },
+        "recurrence": {
+          "frequency": "Minute",
+          "interval": 10
+        },
+        "type": "ApiConnection"
+      }
+    }
+  }
+}
