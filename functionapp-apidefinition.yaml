@@ -1,0 +1,57 @@
+swagger: '2.0'
+info:
+  title: basta2018function.azurewebsites.net
+  version: 1.0.0
+host: basta2018function.azurewebsites.net
+basePath: /
+schemes:
+  - https
+  - http
+paths:
+  /api/CheckOrderLimit:
+    post:
+      operationId: Check order limit
+      produces:
+        - application/json
+      consumes:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          description: Order information
+          x-ms-summary: Order information
+          x-ms-visibility: important
+          required: true
+          schema:
+            type: object
+            properties:
+              pricePerItem:
+                description: The price per item in EUR
+                type: number
+                x-ms-summary: Price per item
+                x-ms-visibility: important
+              amount:
+                description: The order amount
+                type: number
+                x-ms-summary: Amount
+                x-ms-visibility: important
+      description: Checking order limits based on amount and price per item.
+      responses:
+        '200':
+          description: Information if the order is below limit
+          x-ms-summary: Is below limit
+          schema:
+            type: object
+            properties:
+              isBelowLimit:
+                type: boolean
+                description: Returns Yes or No depending on calculations
+                x-ms-summary: Is below limit
+      security:
+        - apikeyQuery: []
+definitions: {}
+securityDefinitions:
+  apikeyQuery:
+    type: apiKey
+    name: code
+    in: query

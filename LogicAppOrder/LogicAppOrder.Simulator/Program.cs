@@ -13,7 +13,7 @@ namespace LogicAppOrder.Simulator
     {
         static void Main(string[] args)
         {
-            var client = QueueClient.CreateFromConnectionString("Endpoint=sb://logicappvienna.servicebus.windows.net/;SharedAccessKeyName=WriteKey;SharedAccessKey=DPbxHCRnOvttCYikc16caYcJMZRZEMrSnWNDFSzw6kE=;EntityPath=orders");
+            var client = QueueClient.CreateFromConnectionString("Endpoint=sb://basta2018.servicebus.windows.net/;SharedAccessKeyName=Write;SharedAccessKey=L/iTs0AVaq8RK3igOkC7GAfEri8d4/B5SLTHuHix0ew=;EntityPath=orders");
 
             var messages = client.ReceiveBatch(10, TimeSpan.FromSeconds(1));
             foreach (var m in messages)

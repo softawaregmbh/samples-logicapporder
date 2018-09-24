@@ -96,7 +96,9 @@
   <ItemGroup>
     <Content Include="packages.config" />
     <None Include="Properties\PublishProfiles\logicappdelivery - Web Deploy.pubxml" />
+    <None Include="Properties\PublishProfiles\logicappdelivery2 - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\logicapporder - Web Deploy.pubxml" />
+    <None Include="Properties\PublishProfiles\LogicAppVienna-Delivery - Web Deploy.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
